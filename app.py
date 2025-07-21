@@ -15,7 +15,7 @@ collection = db["aiagent"]                          # 🔁 Your collection name
 def format_email_body(summaries):
     blocks = []
     for item in summaries:
-        blocks.append(f"📌 *{item.heading}*\n{item.summary}\n🔸 Engagement: {item.get('engagement', 'N/A')}\n")
+        blocks.append(f"📌 *{item.heading}*\n{item.summary}\n🔸 Engagement: {item.engagement or 'N/A'}\n")
     return "\n\n".join(blocks)
 
 @app.route('/trend-summary', methods=['POST'])
