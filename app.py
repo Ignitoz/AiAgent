@@ -72,7 +72,7 @@ def refresh_trends_task():
         # Send email
         send_email(subject, email_body, email_id)
 
-    return jsonify({"status": "success", "message": "✅ All trends refreshed and emails sent."}), 200
+    print("✅ All trends refreshed and emails sent.")
 
 @app.route("/refresh-trends", methods=["GET"])
 def trigger_refresh_async():
