@@ -50,14 +50,13 @@ def send_email(subject, body, to_email):
 def refresh_trends_task():
     all_records = list(collection.find())
     for record in all_records:
-        trend_id = record.get("id")
         brand = record.get("brand")
         product = record.get("product")
         subject = record.get("email_subject", f"{brand} - Trend Summary")
         email_id = record.get("email_id")
         metadata = record.get("metadata", {})
 
-        if not trend_id or not brand or not product or not email_id:
+        if not brand or not product or not email_id:
             continue  # Skip if essential data is missing
 
         # Run trend agent
@@ -94,7 +93,7 @@ def summary():
         data = request.get_json(force=True)
 
         # Extract fields
-        trend_id = data.get("id")
+        
         brand = data.get("brand")
         product = data.get("product")
         subject = data.get("email_subject", f"{brand} - Trend Summary")
@@ -104,8 +103,6 @@ def summary():
         
         # Identify missing fields
         missing_fields = []
-        if not trend_id:
-            missing_fields.append("id")
         if not brand:
             missing_fields.append("brand")
         if not product:
@@ -121,6 +118,12 @@ def summary():
                 "status": "error",
                 "message": f"Missing required field(s): {', '.join(missing_fields)}"
             }), 400
+        existing = collection.find_one({"email_id":email_id,"product":product,"brand":brand})
+        if existing:
+            return jsonify({
+                "status": "error",
+                "message": "Trend filters already exists"
+            }), 400
         thread = threading.Thread(target=trend_summary, args=(data,))
         thread.start()
         return jsonify({"status": "success", "message": "⏳ Email will be sent shortly"}), 202
@@ -129,7 +132,6 @@ def summary():
 
 def trend_summary(data):
     try:
-        trend_id = data.get("id")
         brand = data.get("brand")
         product = data.get("product")
         subject = data.get("email_subject", f"{brand} - Trend Summary")
@@ -152,36 +154,19 @@ def trend_summary(data):
         timestamp = datetime.now().isoformat()
         send_email(subject, email_body, email_id)
 
-        # Check if trend already exists
-        existing = collection.find_one({"id": trend_id})
-
-        if existing:
-            collection.update_one(
-                {"id": trend_id},
-                {"$set": {
-                    "email_subject": subject,
-                    "email_body": email_body,
-                    "brand": brand,
-                    "product": product,
-                    "metadata": metadata,
-                    "updated_at": timestamp
-                }}
-            )
-            print(f"✅ Trend {trend_id} updated.")
-        else:
-            collection.insert_one({
-                "id": trend_id,
-                "brand": brand,
-                "product": product,
-                "email_id": email_id,
-                "name": name,
-                "email_subject": subject,
-                "email_body": email_body,
-                "metadata": metadata,
-                "created_at": timestamp,
-                "updated_at": timestamp
-            })
-            print(f"✅ Trend {trend_id} inserted.")
+        collection.insert_one({
+            "id": trend_id,
+            "brand": brand,
+            "product": product,
+            "email_id": email_id,
+            "name": name,
+            "email_subject": subject,
+            "email_body": email_body,
+            "metadata": metadata,
+            "created_at": timestamp,
+            "updated_at": timestamp
+        })
+        print(f"✅ Trend {trend_id} inserted.")
 
     except Exception as e:
         print(f"❌ Error processing trend summary: {str(e)}")
