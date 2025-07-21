@@ -92,7 +92,8 @@ def trigger_refresh_async():
 def summary():
     try:
         data = request.get_json(force=True)
-    
+
+        # Extract fields
         trend_id = data.get("id")
         brand = data.get("brand")
         product = data.get("product")
@@ -100,8 +101,26 @@ def summary():
         email_id = data.get("email_id")
         name = data.get("name")
         metadata = data.get("metadata", {})
-        if not trend_id or not brand or not product or not email_id or not name:
-            return jsonify({"status":"error","message":"All required fields are not provided"),400
+        
+        # Identify missing fields
+        missing_fields = []
+        if not trend_id:
+            missing_fields.append("id")
+        if not brand:
+            missing_fields.append("brand")
+        if not product:
+            missing_fields.append("product")
+        if not email_id:
+            missing_fields.append("email_id")
+        if not name:
+            missing_fields.append("name")
+        
+        # Return error if any required field is missing
+        if missing_fields:
+            return jsonify({
+                "status": "error",
+                "message": f"Missing required field(s): {', '.join(missing_fields)}"
+            }), 400
         thread = threading.Thread(target=trend_summary, args=(data,))
         thread.start()
         return jsonify({"status": "success", "message": "⏳ Email will be sent shortly"}), 202
