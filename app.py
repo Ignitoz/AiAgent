@@ -13,8 +13,8 @@ CORS(app)
 
 # MongoDB setup
 client = MongoClient("mongodb+srv://mariamma:0dkg0bIoBxIlDIww@cluster0.yw4vtrc.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0")  # 🔁 Update with your connection string
-db = client["trend_db"]                             # 🔁 Your DB name
-collection = db["aiagent"]                          # 🔁 Your collection name
+db = client["trend_db"]                            
+collection = db["aiagent"]                          
 
 @app.before_request
 def global_auth_check():
