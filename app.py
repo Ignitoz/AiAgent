@@ -31,8 +31,8 @@ def format_email_body(summaries):
     return "\n\n".join(blocks)
 
 def send_email(subject, body, to_email):
-    sender_email = "sandeep.pesala@gmail.com"
-    sender_password = "yirb srxq xied vdip"  # Use App Password, not your real Gmail password
+    sender_email = "socialmediatrends11@gmail.com"
+    sender_password = "lvea ojqg wxps knnl"  # Use App Password, not your real Gmail password
 
     msg = MIMEMultipart()
     msg["From"] = sender_email
