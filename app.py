@@ -69,7 +69,7 @@ def refresh_trends_task():
 
         # Update only email_body
         collection.update_one(
-            {"id": trend_id},
+            {"email_id";email_id,"product":product,"brand":brand},
             {"$set": {
                 "email_body": email_body,
                 "updated_at": timestamp
@@ -139,7 +139,7 @@ def trend_summary(data):
         name = data.get("name")
         metadata = data.get("metadata", {})
 
-        if not trend_id or not brand or not product or not email_id or not name:
+        if not brand or not product or not email_id or not name:
             print("❌ Missing required fields")
             return
 
@@ -155,7 +155,6 @@ def trend_summary(data):
         send_email(subject, email_body, email_id)
 
         collection.insert_one({
-            "id": trend_id,
             "brand": brand,
             "product": product,
             "email_id": email_id,
@@ -166,7 +165,7 @@ def trend_summary(data):
             "created_at": timestamp,
             "updated_at": timestamp
         })
-        print(f"✅ Trend {trend_id} inserted.")
+        print(f"✅ record inserted.")
 
     except Exception as e:
         print(f"❌ Error processing trend summary: {str(e)}")
