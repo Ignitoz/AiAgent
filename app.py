@@ -16,6 +16,14 @@ client = MongoClient("mongodb+srv://mariamma:0dkg0bIoBxIlDIww@cluster0.yw4vtrc.m
 db = client["trend_db"]                             # 🔁 Your DB name
 collection = db["aiagent"]                          # 🔁 Your collection name
 
+@app.before_request
+def global_auth_check():
+    exempt_routes = ['default']
+    if request.endpoint in exempt_routes:
+        return
+    if request.method == "OPTIONS":
+        return '', 200
+
 def format_email_body(summaries):
     blocks = []
     for item in summaries:
@@ -74,13 +82,13 @@ def refresh_trends_task():
 
     print("✅ All trends refreshed and emails sent.")
 
-@app.route("/refresh-trends", methods=["GET"])
+@app.route("/refresh-trends", methods=["GET","OPTIONS"])
 def trigger_refresh_async():
     thread = threading.Thread(target=refresh_trends_task)
     thread.start()
     return jsonify({"status": "success", "message": "⏳ Refresh started in background."}), 202
 
-@app.route('/trend-summary', methods=['POST'])
+@app.route('/trend-summary', methods=['POST',"OPTIONS"])
 def trend_summary():
     try:
         data = request.get_json(force=True)
