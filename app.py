@@ -15,7 +15,7 @@ collection = db["aiagent"]                          # 🔁 Your collection name
 def format_email_body(summaries):
     blocks = []
     for item in summaries:
-        blocks.append(f"📌 *{item['heading']}*\n{item['summary']}\n🔸 Engagement: {item.get('engagement', 'N/A')}\n")
+        blocks.append(f"📌 *{item.heading}*\n{item.summary}\n🔸 Engagement: {item.get('engagement', 'N/A')}\n")
     return "\n\n".join(blocks)
 
 @app.route('/trend-summary', methods=['POST'])
@@ -27,10 +27,12 @@ def trend_summary():
         brand = data.get("brand")
         product = data.get("product")
         subject = data.get("email_subject", f"{brand} - Trend Summary")
+        email_id = data.get("email_id)
+        name = data.get("name)
         metadata = data.get("metadata", {})
 
         if not trend_id or not brand or not product:
-            return jsonify({"status": "error", "message": "Missing 'id', 'brand', or 'product'."}), 400
+            return jsonify({"status": "error", "message": "Missing 'id', 'brand','email_id','name' or 'product'."}), 400
 
         # Build query
         query = f"What are {brand}'s competitors doing in the {product} space?"
@@ -41,7 +43,7 @@ def trend_summary():
 
         # Format summary
         email_body = format_email_body(summaries)
-        timestamp = datetime.utcnow().isoformat()
+        timestamp = datetime.now().isoformat()
 
         # Check if trend already exists
         existing = collection.find_one({"id": trend_id})
@@ -66,6 +68,8 @@ def trend_summary():
                 "id": trend_id,
                 "brand": brand,
                 "product": product,
+                "email_id":"email_id,
+                "name":"name",
                 "email_subject": subject,
                 "email_body": email_body,
                 "metadata": metadata,
