@@ -36,7 +36,7 @@ def trend_summary():
         query = f"What are {brand}'s competitors doing in the {product} space?"
 
         # Run trend agent
-        trend_output = run_trend_agent(query)
+        trend_output = run_trend_agent(query,brand,product)
         summaries = trend_output.get("summaries", [])
 
         # Format summary
