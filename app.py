@@ -30,22 +30,56 @@ def format_email_body(summaries):
         blocks.append(f"📌 *{item.heading}*\n{item.summary}\n🔸 Engagement: {item.engagement or 'N/A'}\n")
     return "\n\n".join(blocks)
 
-def send_email(subject, body, to_email):
+def send_email(subject, body, to_email, name):
     sender_email = "socialmediatrends11@gmail.com"
-    sender_password = "lvea ojqg wxps knnl"  # Use App Password, not your real Gmail password
+    sender_password = "lvea ojqg wxps knnl"  # Use Gmail App Password
 
-    msg = MIMEMultipart()
+    msg = MIMEMultipart("alternative")
     msg["From"] = sender_email
     msg["To"] = to_email
     msg["Subject"] = subject
-    intro = "Please find the competitor trends below:\n\n"
-    full_body = intro + body
-    msg.attach(MIMEText(full_body, "plain"))
+
+    # 👋 Custom Greeting
+    greeting = f"<p style='font-family:Arial; font-size:14px;'>Dear <strong>{name.title()}</strong>,</p>"
+    intro = "<p style='font-family:Arial; font-size:14px;'>Please find the latest competitor trends below:</p>"
+
+    # 📝 Format body into bullet points
+    bullet_list = ""
+    for line in body.strip().split("\n\n"):
+        lines = line.split("\n")
+        if len(lines) >= 3:
+            heading = lines[0].replace("📌", "").strip()
+            summary = lines[1].strip()
+            engagement = lines[2].replace("🔸", "").strip()
+            bullet_list += f"""
+            <li style="margin-bottom:12px;">
+                <strong>{heading}</strong><br>
+                {summary}<br>
+                <em style='color:gray;'>Engagement: {engagement}</em>
+            </li>
+            """
+        else:
+            bullet_list += f"<li>{line.strip()}</li>"
+
+    html_body = f"""
+    <html>
+        <body style="font-family: Arial, sans-serif; font-size: 14px; color: #333;">
+            {greeting}
+            {intro}
+            <ul style="padding-left: 20px; margin-top: 10px;">
+                {bullet_list}
+            </ul>
+            <p style='margin-top:30px;'>Best regards,<br><strong>Trend Insights Team</strong></p>
+        </body>
+    </html>
+    """
+
+    msg.attach(MIMEText(html_body, "html"))
 
     with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
         server.login(sender_email, sender_password)
         server.send_message(msg)
-        print("✅ Email sent")
+        print("✅ HTML email sent to", to_email)
 
 def refresh_trends_task():
     all_records = list(collection.find())
@@ -54,6 +88,7 @@ def refresh_trends_task():
         product = record.get("product")
         subject = record.get("email_subject", f"{brand} - Trend Summary")
         email_id = record.get("email_id")
+        name= record.get("name")
         metadata = record.get("metadata", {})
 
         if not brand or not product or not email_id:
@@ -77,7 +112,7 @@ def refresh_trends_task():
         )
 
         # Send email
-        send_email(subject, email_body, email_id)
+        send_email(subject, email_body, email_id,name)
 
     print("✅ All trends refreshed and emails sent.")
 
@@ -152,7 +187,7 @@ def trend_summary(data):
         # Format summary
         email_body = format_email_body(summaries)
         timestamp = datetime.now().isoformat()
-        send_email(subject, email_body, email_id)
+        send_email(subject, email_body, email_id,name)
 
         collection.insert_one({
             "brand": brand,
