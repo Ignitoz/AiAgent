@@ -65,10 +65,10 @@ search_tool = TavilySearch()
 
 def fetch_content(state: TrendState):
     print(f"🔍 Searching for competitors of {state.brand} in {state.product}")
-    query = f"What are {state.brand}'s competitors doing in the {state.product} category on social platforms?"
+    query = f"What are {state.brand}'s competitors doing in the {state.product} category on social platforms in the past two days?"
     results = search_tool.run(query)
     contents = [r["content"] for r in results if "content" in r]
-    merged = "\n\n".join(contents[:2])  # trim to 2 chunks for speed
+    merged = "\n\n".join(contents[:6])  # trim to 2 chunks for speed
     return {"content": merged}
 
 def summarize(state: TrendState):
@@ -137,5 +137,5 @@ if __name__ == "__main__":
     product = "perfume"
 
     trend = run_trend_agent(topic,brand,product)
-    response = [{"Heading": item["heading"], "Summary": item["summary"]} for item in trend["summaries"]]
+    response = [{"Heading": item.heading, "Summary": item.summary} for item in trend["summaries"]]
     print(response)
