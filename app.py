@@ -69,7 +69,7 @@ def refresh_trends_task():
 
         # Update only email_body
         collection.update_one(
-            {"email_id";email_id,"product":product,"brand":brand},
+            {"email_id":email_id,"product":product,"brand":brand},
             {"$set": {
                 "email_body": email_body,
                 "updated_at": timestamp
