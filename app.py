@@ -88,10 +88,18 @@ def trigger_refresh_async():
     thread.start()
     return jsonify({"status": "success", "message": "⏳ Refresh started in background."}), 202
 
-@app.route('/trend-summary', methods=['POST',"OPTIONS"])
-def trend_summary():
+@app.route('/trend-summary', methods=['POST', 'OPTIONS'])
+def summary():
     try:
         data = request.get_json(force=True)
+        thread = threading.Thread(target=trend_summary, args=(data,))
+        thread.start()
+        return jsonify({"status": "success", "message": "⏳ Email will be sent shortly"}), 202
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+def trend_summary(data):
+    try:
         trend_id = data.get("id")
         brand = data.get("brand")
         product = data.get("product")
@@ -100,14 +108,14 @@ def trend_summary():
         name = data.get("name")
         metadata = data.get("metadata", {})
 
-        if not trend_id or not brand or not product:
-            return jsonify({"status": "error", "message": "Missing 'id', 'brand','email_id','name' or 'product'."}), 400
+        if not trend_id or not brand or not product or not email_id or not name:
+            print("❌ Missing required fields")
+            return
 
-        # Build query
         query = f"What are {brand}'s competitors doing in the {product} space?"
 
         # Run trend agent
-        trend_output = run_trend_agent(query,brand,product)
+        trend_output = run_trend_agent(query, brand, product)
         summaries = trend_output.get("summaries", [])
 
         # Format summary
@@ -119,7 +127,6 @@ def trend_summary():
         existing = collection.find_one({"id": trend_id})
 
         if existing:
-            # Update document
             collection.update_one(
                 {"id": trend_id},
                 {"$set": {
@@ -131,27 +138,24 @@ def trend_summary():
                     "updated_at": timestamp
                 }}
             )
-            action = "updated"
+            print(f"✅ Trend {trend_id} updated.")
         else:
-            # Insert new document
             collection.insert_one({
                 "id": trend_id,
                 "brand": brand,
                 "product": product,
-                "email_id":email_id,
-                "name":name,
+                "email_id": email_id,
+                "name": name,
                 "email_subject": subject,
                 "email_body": email_body,
                 "metadata": metadata,
                 "created_at": timestamp,
                 "updated_at": timestamp
             })
-            action = "inserted"
-
-        return jsonify({"status": "success", "message": f"Trend {action} successfully", "id": trend_id}), 200
+            print(f"✅ Trend {trend_id} inserted.")
 
     except Exception as e:
-        return jsonify({"status": "error", "message": f"❌ Error: {str(e)}"}), 500
+        print(f"❌ Error processing trend summary: {str(e)}")
 
 @app.route("/")
 def default():
