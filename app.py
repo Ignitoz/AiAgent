@@ -29,7 +29,9 @@ def send_email(subject, body, to_email):
     msg["From"] = sender_email
     msg["To"] = to_email
     msg["Subject"] = subject
-    msg.attach(MIMEText(body, "plain"))
+    intro = "Please find the competitor trends below:\n\n"
+    full_body = intro + body
+    msg.attach(MIMEText(full_body, "plain"))
 
     with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
         server.login(sender_email, sender_password)
@@ -42,7 +44,6 @@ def send_email(subject, body, to_email):
 def trend_summary():
     try:
         data = request.get_json(force=True)
-
         trend_id = data.get("id")
         brand = data.get("brand")
         product = data.get("product")
