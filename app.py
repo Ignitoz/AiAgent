@@ -6,6 +6,7 @@ from flask_cors import CORS
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+import threading
 
 app = Flask(__name__)
 CORS(app) 
@@ -38,7 +39,46 @@ def send_email(subject, body, to_email):
         server.send_message(msg)
         print("✅ Email sent")
 
+def refresh_trends_task():
+    all_records = list(collection.find())
+    for record in all_records:
+        trend_id = record.get("id")
+        brand = record.get("brand")
+        product = record.get("product")
+        subject = record.get("email_subject", f"{brand} - Trend Summary")
+        email_id = record.get("email_id")
+        metadata = record.get("metadata", {})
 
+        if not trend_id or not brand or not product or not email_id:
+            continue  # Skip if essential data is missing
+
+        # Run trend agent
+        trend_output = run_trend_agent(f"What are {brand}'s competitors doing in the {product} space?", brand, product)
+        summaries = trend_output.get("summaries", [])
+
+        # Format summary
+        email_body = format_email_body(summaries)
+        timestamp = datetime.now().isoformat()
+
+        # Update only email_body
+        collection.update_one(
+            {"id": trend_id},
+            {"$set": {
+                "email_body": email_body,
+                "updated_at": timestamp
+            }}
+        )
+
+        # Send email
+        send_email(subject, email_body, email_id)
+
+    return jsonify({"status": "success", "message": "✅ All trends refreshed and emails sent."}), 200
+
+@app.route("/refresh-trends", methods=["GET"])
+def trigger_refresh_async():
+    thread = threading.Thread(target=refresh_trends_task)
+    thread.start()
+    return jsonify({"status": "success", "message": "⏳ Refresh started in background."}), 202
 
 @app.route('/trend-summary', methods=['POST'])
 def trend_summary():
