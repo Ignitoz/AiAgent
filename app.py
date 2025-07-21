@@ -27,8 +27,8 @@ def trend_summary():
         brand = data.get("brand")
         product = data.get("product")
         subject = data.get("email_subject", f"{brand} - Trend Summary")
-        email_id = data.get("email_id)
-        name = data.get("name)
+        email_id = data.get("email_id")
+        name = data.get("name")
         metadata = data.get("metadata", {})
 
         if not trend_id or not brand or not product:
