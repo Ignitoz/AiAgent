@@ -3,6 +3,9 @@ from pymongo import MongoClient
 from datetime import datetime
 from trend_agent import run_trend_agent  # Your existing module
 from flask_cors import CORS
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 
 app = Flask(__name__)
 CORS(app) 
@@ -17,6 +20,23 @@ def format_email_body(summaries):
     for item in summaries:
         blocks.append(f"📌 *{item.heading}*\n{item.summary}\n🔸 Engagement: {item.engagement or 'N/A'}\n")
     return "\n\n".join(blocks)
+
+def send_email(subject, body, to_email):
+    sender_email = "sandeep.pesala@gmail.com"
+    sender_password = "yirb srxq xied vdip"  # Use App Password, not your real Gmail password
+
+    msg = MIMEMultipart()
+    msg["From"] = sender_email
+    msg["To"] = to_email
+    msg["Subject"] = subject
+    msg.attach(MIMEText(body, "plain"))
+
+    with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
+        server.login(sender_email, sender_password)
+        server.send_message(msg)
+        print("✅ Email sent")
+
+
 
 @app.route('/trend-summary', methods=['POST'])
 def trend_summary():
@@ -44,6 +64,7 @@ def trend_summary():
         # Format summary
         email_body = format_email_body(summaries)
         timestamp = datetime.now().isoformat()
+        send_email(subject, email_body, email_id)
 
         # Check if trend already exists
         existing = collection.find_one({"id": trend_id})
