@@ -136,6 +136,6 @@ if __name__ == "__main__":
     brand = "Dior"
     product = "perfume"
 
-    trend = run_trend_agent(topic)
+    trend = run_trend_agent(topic,brand,product)
     response = [{"Heading": item["heading"], "Summary": item["summary"]} for item in trend["summaries"]]
     print(response)
