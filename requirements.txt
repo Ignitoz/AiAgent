@@ -1,4 +1,7 @@
 ﻿# Core Dependencies (Fixed versions)
+setuptools>=65.0.0
+wheel
+build
 langchain-core==0.3.52 # Last version with confirmed _api.deprecation
 langchain==0.3.20
 pydantic==2.10.0b2
@@ -7,7 +10,7 @@ flask
 flask-cors
 pymongo
 gunicorn
-setuptools
+
 # Your Existing Dependencies (Preserved)
 aiohttp==3.12.14
 aiosignal==1.4.0
